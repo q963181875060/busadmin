@@ -55,7 +55,7 @@
 <div class="mask"></div>
 <script type="text/javascript">
 
-	var tmp_req_url = 'http://139.199.105.54/busadmin/view/adminController.php';
+	var tmp_req_url = 'adminController.php';
 	var AJAX_TIMEOUT = 2000;
 	
 	$('#dialog_button').click(function(){

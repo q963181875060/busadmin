@@ -24,17 +24,17 @@
 	<div class="side-nav"><?php include 'nav.php'; ?></div>
 	<div class="content-wrap">
 		<header class="top-hd"><?php include 'header.php'; ?></header>
-		<main class="main-cont content mCustomScrollbar" id="route_list_main">
+		<main class="main-cont content mCustomScrollbar">
 			<div class="page-wrap">
 				<!--开始::内容-->
 				<section class="page-hd">
 					<header>
-						<h2 class="title">班次管理</h2>
+						<h2 class="title">代金券管理</h2>
 						<p class="title-description">
-							注意：“上车时间”指的是一趟客运在不同上车点的停靠时间
+							注意：可用班次请填写班次编号，多个班次编号用>间隔，且以>开头和结尾，若全部可用，则填写“>全部>”
 						</p>
 						<p class="title-description">
-							注意：不同时间、上车点、下车点、可售日期，用>进行间隔
+							注意：“特价票是否可用”中，1代表可用，0代表不可用。
 						</p>
 					</header>
 					<hr>
@@ -45,55 +45,52 @@
 							<th><input type="checkbox"/></th>
 							<?php
 								include 'adminLogicController.php';
-								$route_template = get_admin_routes_template();
-								foreach($route_template as $key=>$value){
+								$coupon_template = get_admin_coupons_template();
+								foreach($coupon_template as $key=>$value){
 									echo '<th>'.$value.'</th>';
 								}
 							?>
 							<th>操作</th>
 						</tr>
 					</thead>
-					<tbody id="route_tbody">
+					<tbody>
 					<?php
 					
-					$routes = get_admin_routes();
-					//echo 'routes size='.count($routes);
-					foreach($routes as $key_out=>$route){
+					$coupons = get_admin_coupons();
+					foreach($coupons as $key_out=>$coupon){
 						
-						echo '<tr class="cen" id="uneditable_tr_'.$route['route_id'].'">
+						echo '<tr class="cen" id="uneditable_tr_'.$coupon['coupon_id'].'">
 								<td><input type="checkbox"/></td>';
-						//echo 'size='.count($route);
-						//print_r($route);
-						foreach($route as $key=>$value){
+						foreach($coupon as $key=>$value){
 							echo '<td>'.$value.'</td>';
 						}
 						echo '
 							<td>
-								<a title="编辑" class="mr-5" onclick="edit_route('.$route['route_id'].')">编辑</a>
-								<a title="删除" class="mr-5" onclick="delete_route('.$route['route_id'].')">删除</a>
+								<a title="编辑" class="mr-5" onclick="edit_coupon('.$coupon['coupon_id'].')">编辑</a>
+								<a title="删除" class="mr-5" onclick="delete_coupon('.$coupon['coupon_id'].')">删除</a>
 							</td>
 						</tr>';
 						
-						echo '<tr class="cen" id="editable_tr_'.$route['route_id'].'"  style="display:none">
+						echo '<tr class="cen" id="editable_tr_'.$coupon['coupon_id'].'"  style="display:none">
 								<td><input type="checkbox"/></td>';
-						foreach($route as $key=>$value){
-							echo '<td><textarea class="new_textarea_'.$route['route_id'].'" style="height:300px" class="form-control form-boxed" id="'.$key.'">'.$value.'</textarea></td>';
+						foreach($coupon as $key=>$value){
+							echo '<td><textarea class="new_textarea_'.$coupon['coupon_id'].'" style="height:300px" class="form-control form-boxed" id="'.$key.'">'.$value.'</textarea></td>';
 						}
 						echo '<td>
-								<a title="保存" class="mr-5" onclick="save_route('.$route['route_id'].')">保存</a>
-								<a title="取消" class="mr-5" onclick="cancel_route('.$route['route_id'].')">取消</a>
+								<a title="保存" class="mr-5" onclick="save_coupon('.$coupon['coupon_id'].')">保存</a>
+								<a title="取消" class="mr-5" onclick="cancel_coupon('.$coupon['coupon_id'].')">取消</a>
 							</td>
 						</tr>';
 					}
 					
 					echo '<tr class="cen" id="editable_tr_-1"  style="display:none">
 							<td><input type="checkbox"/></td>';
-					foreach($route_template as $key=>$value){
+					foreach($coupon_template as $key=>$value){
 						echo '<td><textarea class="new_textarea_-1" style="height:300px" class="form-control form-boxed" id="'.$key.'"></textarea></td>';
 					}
 					echo '	<td>
-								<a title="保存" class="mr-5" onclick="save_route(-1)">保存</a>
-								<a title="取消" class="mr-5" onclick="cancel_route(-1)">取消</a>
+								<a title="保存" class="mr-5" onclick="save_coupon(-1)">保存</a>
+								<a title="取消" class="mr-5" onclick="cancel_coupon(-1)">取消</a>
 							</td>
 						</tr>';
 					?>
@@ -102,7 +99,7 @@
 					
 					</tbody>
 				</table>
-				<a class="mr-5" onclick="add_route()">新增</a>
+				<a class="mr-5" onclick="add_coupon()">新增</a>
 				<!--开始::结束-->
 			</div>
 		</main>
@@ -111,9 +108,9 @@
 			var tmp_req_url = 'adminController.php';
 			var AJAX_TIMEOUT = 2000;
 		
-			function delete_route(route_id){
-				if(window.confirm('【敏感操作】你确定要删除此条路线吗？')){
-					var post_data = {'action': 'delete_route','route_id':route_id};
+			function delete_coupon(coupon_id){
+				if(window.confirm('【敏感操作】你确定要删除此代金券吗？')){
+					var post_data = {'action': 'delete_coupon','coupon_id':coupon_id};
 					$.ajax({
 						type        : 'post',
 						url         : tmp_req_url,
@@ -133,26 +130,32 @@
 				}
 			}
 			
-			function edit_route(route_id){
+			function edit_coupon(coupon_id){
 				
-				$("#uneditable_tr_"+route_id).hide();	
-				$("#editable_tr_"+route_id).show();
+				$("#uneditable_tr_"+coupon_id).hide();	
+				$("#editable_tr_"+coupon_id).show();
 			}
 			
-			function save_route(route_id){
-				if(route_id != -1){
-					if(!window.confirm('【敏感操作】确定要修改此条路线吗？')){
+			function save_coupon(coupon_id){
+				if(coupon_id != -1){
+					if(!window.confirm('【敏感操作】确定要修改此代金券吗？')){
 						return;
 					}
 				}
 				
 				var params = {};
-				var data = $(".new_textarea_"+route_id);
+				var data = $(".new_textarea_"+coupon_id);
+				
 				for(var i=0;i<data.length;i++){
 					params[data[i].id] = data[i].value;
+					
+					if(data[i].id == 'route_ids' && (data[i].value.charAt(0) != '>' || data[i].value.charAt(data[i].value.length-1) != '>')){
+						alert("可用班次填写错误，应以>开头和结尾");
+						return;
+					}
 				}				
 				
-				var post_data = {'action': 'save_route','route_id':route_id,'params':params};
+				var post_data = {'action': 'save_coupon','coupon_id':coupon_id,'params':params};
 				$.ajax({
 					type        : 'post',
 					url         : tmp_req_url,
@@ -165,12 +168,12 @@
 				})
 			}
 			
-			function cancel_route(route_id){
-				$("#uneditable_tr_"+route_id).show();	
-				$("#editable_tr_"+route_id).hide();
+			function cancel_coupon(coupon_id){
+				$("#uneditable_tr_"+coupon_id).show();	
+				$("#editable_tr_"+coupon_id).hide();
 			}
 			
-			function add_route(){
+			function add_coupon(){
 				$("#editable_tr_-1").show();
 			}
 		</script>

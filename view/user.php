@@ -29,12 +29,12 @@
 				<!--开始::内容-->
 				<section class="page-hd">
 					<header>
-						<h2 class="title">班次管理</h2>
+						<h2 class="title">人员管理</h2>
 						<p class="title-description">
-							注意：“上车时间”指的是一趟客运在不同上车点的停靠时间
+							添加验票员流程：1.只填姓名、手机号（必填，且不可改）、角色（填验票员） 2.让验票员通过微信发送自己手机号给合力巴士公众号，则状态自动变更为已绑定
 						</p>
 						<p class="title-description">
-							注意：不同时间、上车点、下车点、可售日期，用>进行间隔
+							状态有三种：（空），已绑定，已解绑。若要解绑验票员，设置其状态为“已解绑”即可，若开启，则设置状态为空，并进入上面的流程。
 						</p>
 					</header>
 					<hr>
@@ -45,8 +45,8 @@
 							<th><input type="checkbox"/></th>
 							<?php
 								include 'adminLogicController.php';
-								$route_template = get_admin_routes_template();
-								foreach($route_template as $key=>$value){
+								$template = get_admin_verify_users_template();
+								foreach($template as $key=>$value){
 									echo '<th>'.$value.'</th>';
 								}
 							?>
@@ -56,44 +56,42 @@
 					<tbody id="route_tbody">
 					<?php
 					
-					$routes = get_admin_routes();
-					//echo 'routes size='.count($routes);
-					foreach($routes as $key_out=>$route){
+					$units = get_admin_verify_users();
+					foreach($units as $key_out=>$unit){
 						
-						echo '<tr class="cen" id="uneditable_tr_'.$route['route_id'].'">
+						echo '<tr class="cen" id="uneditable_tr_'.$unit['mobile'].'">
 								<td><input type="checkbox"/></td>';
-						//echo 'size='.count($route);
-						//print_r($route);
-						foreach($route as $key=>$value){
+						
+						foreach($unit as $key=>$value){
 							echo '<td>'.$value.'</td>';
 						}
 						echo '
 							<td>
-								<a title="编辑" class="mr-5" onclick="edit_route('.$route['route_id'].')">编辑</a>
-								<a title="删除" class="mr-5" onclick="delete_route('.$route['route_id'].')">删除</a>
+								<a title="编辑" class="mr-5" onclick="edit('.$unit['mobile'].')">编辑</a>
+								<a title="删除" class="mr-5" onclick="delete_('.$unit['mobile'].')">删除</a>
 							</td>
 						</tr>';
 						
-						echo '<tr class="cen" id="editable_tr_'.$route['route_id'].'"  style="display:none">
+						echo '<tr class="cen" id="editable_tr_'.$unit['mobile'].'"  style="display:none">
 								<td><input type="checkbox"/></td>';
-						foreach($route as $key=>$value){
-							echo '<td><textarea class="new_textarea_'.$route['route_id'].'" style="height:300px" class="form-control form-boxed" id="'.$key.'">'.$value.'</textarea></td>';
+						foreach($unit as $key=>$value){
+							echo '<td><textarea class="new_textarea_'.$unit['mobile'].'" style="height:300px" class="form-control form-boxed" id="'.$key.'">'.$value.'</textarea></td>';
 						}
 						echo '<td>
-								<a title="保存" class="mr-5" onclick="save_route('.$route['route_id'].')">保存</a>
-								<a title="取消" class="mr-5" onclick="cancel_route('.$route['route_id'].')">取消</a>
+								<a title="保存" class="mr-5" onclick="save('.$unit['mobile'].')">保存</a>
+								<a title="取消" class="mr-5" onclick="cancel('.$unit['mobile'].')">取消</a>
 							</td>
 						</tr>';
 					}
 					
 					echo '<tr class="cen" id="editable_tr_-1"  style="display:none">
 							<td><input type="checkbox"/></td>';
-					foreach($route_template as $key=>$value){
+					foreach($template as $key=>$value){
 						echo '<td><textarea class="new_textarea_-1" style="height:300px" class="form-control form-boxed" id="'.$key.'"></textarea></td>';
 					}
 					echo '	<td>
-								<a title="保存" class="mr-5" onclick="save_route(-1)">保存</a>
-								<a title="取消" class="mr-5" onclick="cancel_route(-1)">取消</a>
+								<a title="保存" class="mr-5" onclick="save(-1)">保存</a>
+								<a title="取消" class="mr-5" onclick="cancel(-1)">取消</a>
 							</td>
 						</tr>';
 					?>
@@ -102,7 +100,7 @@
 					
 					</tbody>
 				</table>
-				<a class="mr-5" onclick="add_route()">新增</a>
+				<a class="mr-5" onclick="add()">新增</a>
 				<!--开始::结束-->
 			</div>
 		</main>
@@ -111,9 +109,9 @@
 			var tmp_req_url = 'adminController.php';
 			var AJAX_TIMEOUT = 2000;
 		
-			function delete_route(route_id){
-				if(window.confirm('【敏感操作】你确定要删除此条路线吗？')){
-					var post_data = {'action': 'delete_route','route_id':route_id};
+			/*function delete_(mobile){
+				if(window.confirm('【敏感操作】你确定要删除吗？')){
+					var post_data = {'action': 'delete_user','mobile':mobile};
 					$.ajax({
 						type        : 'post',
 						url         : tmp_req_url,
@@ -131,28 +129,28 @@
 						}
 					})
 				}
-			}
+			}*/
 			
-			function edit_route(route_id){
+			function edit(mobile){
 				
-				$("#uneditable_tr_"+route_id).hide();	
-				$("#editable_tr_"+route_id).show();
+				$("#uneditable_tr_"+mobile).hide();	
+				$("#editable_tr_"+mobile).show();
 			}
 			
-			function save_route(route_id){
-				if(route_id != -1){
-					if(!window.confirm('【敏感操作】确定要修改此条路线吗？')){
+			function save(mobile){
+				if(mobile != -1){
+					if(!window.confirm('【敏感操作】确定要修改吗？')){
 						return;
 					}
 				}
 				
 				var params = {};
-				var data = $(".new_textarea_"+route_id);
+				var data = $(".new_textarea_"+mobile);
 				for(var i=0;i<data.length;i++){
 					params[data[i].id] = data[i].value;
 				}				
 				
-				var post_data = {'action': 'save_route','route_id':route_id,'params':params};
+				var post_data = {'action': 'save_user','mobile':mobile,'params':params};
 				$.ajax({
 					type        : 'post',
 					url         : tmp_req_url,
@@ -165,12 +163,12 @@
 				})
 			}
 			
-			function cancel_route(route_id){
-				$("#uneditable_tr_"+route_id).show();	
-				$("#editable_tr_"+route_id).hide();
+			function cancel(id){
+				$("#uneditable_tr_"+id).show();	
+				$("#editable_tr_"+id).hide();
 			}
 			
-			function add_route(){
+			function add(){
 				$("#editable_tr_-1").show();
 			}
 		</script>
