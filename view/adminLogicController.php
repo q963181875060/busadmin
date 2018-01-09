@@ -1,8 +1,6 @@
 <?php
 
-$DBSTR = 'mysql:host=localhost;port=3306;dbname=bus';
-$user='root';      //数据库连接用户名
-$pass='920208';          //对应的密码
+require_once '../../bus/view/common.php';
 
 date_default_timezone_set('Asia/Shanghai');
 if (!isset($_SESSION['user_account'])) 
