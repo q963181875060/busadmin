@@ -36,6 +36,9 @@
 						<p class="title-description">
 							注意：不同时间、上车点、下车点、可售日期，用>进行间隔
 						</p>
+						<p class="title-description">
+							注意：若班次信息发生任何变化，线路加盟商须提前3天告知合力巴士进行信息变更；若未及时告知，线路加盟商须按原班次信息进行运营。
+						</p>
 					</header>
 					<hr>
 				</section>
@@ -49,8 +52,10 @@
 								foreach($route_template as $key=>$value){
 									echo '<th>'.$value.'</th>';
 								}
+								if($_SESSION['user_role'] == '平台管理员'){
+									echo '<th>操作</th>';
+								}
 							?>
-							<th>操作</th>
 						</tr>
 					</thead>
 					<tbody id="route_tbody">
@@ -67,14 +72,16 @@
 						foreach($route as $key=>$value){
 							echo '<td>'.$value.'</td>';
 						}
-						echo '
-							<td>
-								<a title="编辑" class="mr-5" onclick="edit_route('.$route['route_id'].')">编辑</a>
-								<a title="删除" class="mr-5" onclick="delete_route('.$route['route_id'].')">删除</a>
-							</td>
-						</tr>';
+						if($_SESSION['user_role'] == '平台管理员'){
+							echo '
+								<td>
+									<a title="编辑" class="mr-5" onclick="edit_route('.$route['route_id'].')">编辑</a>
+									<a title="删除" class="mr-5" onclick="delete_route('.$route['route_id'].')">删除</a>
+								</td>
+							';
+						}						
 						
-						echo '<tr class="cen" id="editable_tr_'.$route['route_id'].'"  style="display:none">
+						echo '</tr><tr class="cen" id="editable_tr_'.$route['route_id'].'"  style="display:none">
 								<td><input type="checkbox"/></td>';
 						foreach($route as $key=>$value){
 							echo '<td><textarea class="new_textarea_'.$route['route_id'].'" style="height:300px" class="form-control form-boxed" id="'.$key.'">'.$value.'</textarea></td>';
@@ -102,7 +109,12 @@
 					
 					</tbody>
 				</table>
-				<a class="mr-5" onclick="add_route()">新增</a>
+				<?php
+				if($_SESSION['user_role'] == '平台管理员'){
+					echo '<a class="mr-5" onclick="add_route()">新增</a>';
+				}
+				?>
+				
 				<!--开始::结束-->
 			</div>
 		</main>

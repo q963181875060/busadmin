@@ -33,7 +33,7 @@
 					<header>
 						<h2 class="title">班次订单</h2>
 						<p class="title-description">
-							查询各个班次的订票情况
+							注意：只展示有订单的班次，若某班次尚无订票，则不会出现在此列表中；
 						</p>
 					</header>
 					<hr>
@@ -47,8 +47,10 @@
 							foreach($book_template as $key=>$value){
 								echo '<th>'.$value.'</th>';
 							}
+							if($_SESSION['user_role'] == '平台管理员'){
+								echo '<th>操作</th>';
+							}
 						?>
-							<th>操作</th>
 						</tr>
 					</thead>
 					<tbody id="route_tbody">
@@ -60,11 +62,12 @@
 						foreach($book as $key=>$value){
 							echo '<td id="'.$key.'_'.$i.'">'.$value.'</td>';
 						}
-						echo '
-							<td>
-								<a class="mr-5" onclick="filter_books('.$i.')">详情</a>
-							</td>
-						</tr>';
+						if($_SESSION['user_role'] == '平台管理员'){
+							echo '<td>
+									<a class="mr-5" onclick="filter_books('.$i.')">详情</a>
+								 </td>';
+						}
+						echo '</tr>';
 						$i++;
 						
 					}?>

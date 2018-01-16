@@ -15,25 +15,41 @@ if(isset($req['action'])){
 		
         switch ($req['action']){
 			case "admin_login":
-				if(isset($req['params']) && $req['params']['user_account'] == 'owen' && $req['params']['user_passwd'] == '920208'){
-					$res  = array('url'=>'route.php', 'suc'=>1);
-					$_SESSION['user_account'] = $req['params']['user_account'];
-				}else{
-					$res  = array('url'=>'route.php', 'suc'=>0);
+				$suc = 0;
+				if(isset($req['params'])){
+					try {
+						$dbh = new PDO ($DBSTR,$user,$pass); 
+						$exe_params = array();						
+						$sth = $dbh->prepare('select * from company_table where company_login_account=:company_login_account and company_login_password=:company_login_password');
+						$exe_params = array();
+						$exe_params[':company_login_account']=trim($req['params']['user_account']);
+						$exe_params[':company_login_password']=trim($req['params']['user_passwd']);
+						$sth->execute($exe_params);
+						$result = $sth->fetchAll(PDO::FETCH_ASSOC);
+						if(count($result) != 0){
+							$suc = 1;
+							$_SESSION['user_account'] = $result[0]['company_id'];
+							$_SESSION['user_role'] = $result[0]['role'];
+						}
+						$dbh = null;
+					} catch (Exception $e) {
+						error_log($e->getMessage());
+					}
 				}
+				$res  = array('url'=>'route.php', 'suc'=>$suc);
 				echo json_encode($res);	
 				break;
 			case "admin_logout":
 				unset($_SESSION['user_account']);
+				unset($_SESSION['user_role']);
 				$res  = array('url'=>'login.php', 'suc'=>1);
 				echo json_encode($res);	
 				break;
 			case "save_user": 
-				if($req['user_id'] == '-1'){
+				if($req['mobile'] == '-1'){
 					//add new		
 					try {
 						$dbh = new PDO ($DBSTR,$user,$pass);
-						
 						$sql = 'insert into user_table (';
 						$i = 0;
 						foreach($req['params'] as $key=>$value){
@@ -56,13 +72,18 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
-						//error_log(print_r($exe_params));
 						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
 						
 					} catch (PDOException $e) {
-						
+						error_log($e->getMessage());
 					}finally{
 						$dbh = null;
 					}
@@ -83,10 +104,16 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
 						$exe_params[':mobile']=$req['mobile'];
 						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
 						
 					} catch (PDOException $e) {
 						//die ("Error!: " . $e->getMessage() . "<br/>");
@@ -94,8 +121,33 @@ if(isset($req['action'])){
 						$dbh = null;
 					}
 				}
-				$res  = array('url'=>'user.php', 'suc'=>$suc);
+				$res  = array('url'=>'user.php', 'suc'=>$suc, 'msg'=>$msg);
 				echo json_encode($res);		
+				break;
+			case "delete_user":
+				$suc = 0;
+				$msg = '';
+				if(isset($req['mobile'])){
+					try {
+						$dbh = new PDO ($DBSTR,$user,$pass); 
+						$exe_params = array();						
+						$sth = $dbh->prepare('delete from user_table where mobile=:mobile');
+						$exe_params = array();
+						$exe_params[':mobile']=trim($req['mobile']);
+						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
+						$dbh = null;
+					} catch (Exception $e) {
+						error_log($e->getMessage());
+					}
+				}
+				$res  = array('url'=>'user.php', 'suc'=>$suc,'msg'=>$msg);
+				echo json_encode($res);
 				break;
 			case "save_route": 
 				if($req['route_id'] == '-1'){
@@ -125,11 +177,16 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
 						//error_log(print_r($exe_params));
 						$suc = $sth->execute($exe_params);
-						
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
 					} catch (PDOException $e) {
 						
 					}finally{
@@ -152,18 +209,23 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
 						$exe_params[':route_id']=$req['route_id'];
 						$suc = $sth->execute($exe_params);
-						
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
 					} catch (PDOException $e) {
 						//die ("Error!: " . $e->getMessage() . "<br/>");
 					}finally{
 						$dbh = null;
 					}
 				}
-				$res  = array('url'=>'route.php', 'suc'=>$suc);
+				$res  = array('url'=>'route.php', 'suc'=>$suc, 'msg'=>$msg);
 				echo json_encode($res);		
 				break;
 			case "delete_route":
@@ -191,7 +253,10 @@ if(isset($req['action'])){
 							$exe_params[':route_id']=trim($req['route_id']);
 							$suc = $sth->execute($exe_params);
 							if($suc == 0){
-								$msg = '删除班次失败，未知错误，请联系管理员';
+								$msg = json_encode($sth->errorInfo());
+								error_log($msg);
+							}else{
+								$msg = 'suc';
 							}
 						}
 						
@@ -201,6 +266,109 @@ if(isset($req['action'])){
 					}
 				}
 				$res  = array('url'=>'route.php', 'suc'=>$suc,'msg'=>$msg);
+				echo json_encode($res);
+				break;
+			case "save_company": 
+				if($req['company_id'] == '-1'){
+					try {
+						$dbh = new PDO ($DBSTR,$user,$pass);
+						$sql = 'insert into company_table (';
+						$i = 0;
+						foreach($req['params'] as $key=>$value){
+							if($i != 0){
+								$sql = $sql . ',';
+							}
+							$sql = $sql.$key;
+							$i++;
+						}
+						$sql = $sql . ') values (';
+						$i = 0;
+						foreach($req['params'] as $key=>$value){
+							if($i != 0){
+								$sql = $sql . ',';
+							}
+							$sql = $sql . ':' .$key;
+							$i++;
+						}
+						$sql = $sql . ')';
+						$sth = $dbh->prepare($sql);
+						$exe_params = array();
+						foreach($req['params'] as $key=>$value){
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
+						}
+						//error_log(print_r($exe_params));
+						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
+					} catch (PDOException $e) {
+						error_log($e->getMessage());
+					}finally{
+						$dbh = null;
+					}
+				}else{
+					//update
+					try {
+						$dbh = new PDO ($DBSTR,$user,$pass); 
+						$sql = 'update company_table set ';
+						$i = 0;
+						foreach($req['params'] as $key=>$value){
+							if($i != 0){
+								$sql = $sql . ',';
+							}
+							$sql = $sql.$key.'=:'.$key;
+							$i++;
+						}
+						$sql = $sql . ' where company_id=:company_id';
+						$sth = $dbh->prepare($sql);
+						$exe_params = array();
+						foreach($req['params'] as $key=>$value){
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
+						}
+						$exe_params[':company_id']=$req['company_id'];
+						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
+					} catch (PDOException $e) {
+						error_log($e->getMessage());
+					}finally{
+						$dbh = null;
+					}
+				}
+				$res  = array('url'=>'company.php', 'suc'=>$suc, 'msg'=>$msg);
+				echo json_encode($res);		
+				break;
+			case "delete_company":
+				$suc = 0;
+				$msg = '';
+				if(isset($req['company_id'])){
+					try {
+						//如果有人预定了这个班次的订单，则不能删除
+						$dbh = new PDO ($DBSTR,$user,$pass); 
+						$exe_params = array();						
+						$sth = $dbh->prepare('delete from company_table where company_id=:company_id');
+						$exe_params = array();
+						$exe_params[':company_id']=trim($req['company_id']);
+						$suc = $sth->execute($exe_params);
+						if($suc == 0){
+							$msg = json_encode($sth->errorInfo());
+							error_log($msg);
+						}else{
+							$msg = 'suc';
+						}
+						$dbh = null;
+					} catch (Exception $e) {
+						error_log($e->getMessage());
+					}
+				}
+				$res  = array('url'=>'company.php', 'suc'=>$suc,'msg'=>$msg);
 				echo json_encode($res);
 				break;
 			case "save_coupon": 
@@ -232,7 +400,7 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
 						//error_log(print_r($exe_params));
 						$suc = $sth->execute($exe_params);
@@ -258,7 +426,7 @@ if(isset($req['action'])){
 						$sth = $dbh->prepare($sql);
 						$exe_params = array();
 						foreach($req['params'] as $key=>$value){
-							$exe_params[':'.$key]=$value;
+							$exe_params[':'.$key]=(trim($value) == '' ? null : $value);
 						}
 						$exe_params[':coupon_id']=$req['coupon_id'];
 						$suc = $sth->execute($exe_params);
@@ -389,7 +557,7 @@ if(isset($req['action'])){
 					
 					//对用户的账户发起退款
 					$out_trade_no = $result[0]['book_id'];
-					$total_fee = (int)(((float)$result[0]['price'] * (int)$result[0]['ticket_num'] - (float)$result[0]['coupon_price'])*100);
+					$total_fee = round(($result[0]['price'] * $result[0]['ticket_num'] - $result[0]['coupon_price'])*100, 0);
 					if($req['params']['is_refund_full'] != 1){
 						$refund_fee = round($total_fee*0.95, 0);
 					}else{
@@ -421,13 +589,24 @@ if(isset($req['action'])){
 					
 					//发送成功退票模板消息
 					$data[] = array();
-					$data['user_id'] = $result[0]['user_id'];
-					$data['first'] = '取消订单成功！';
-					$data['keyword1'] = $result[0]['book_id'];
-					$data['keyword2'] = '官方退票';
-					$data['keyword3'] = '￥' . round(((float)$refund_fee)/100,2);
-					$data['remark'] = '有疑问欢迎随时联系我们，欢迎下次乘坐合力巴士！';
-					send_cancel_ticket_template($data);
+					$data['touser'] = $result[0]['user_id'];
+					$data['template_id'] = 'hbnz0B3ws3q42XO-qgJg2ogGoYc1jQOWWdxk2HaXbdA';
+					$data['data'] = array();
+					$data['data']['first'] = array();
+					$data['data']['first']['value'] = '取消订单成功！';
+					$data['data']['first']['color'] = '#173177';
+					$data['data']['keyword1'] = array();
+					$data['data']['keyword1']['value'] = $result[0]['book_id'];
+					$data['data']['keyword2'] = array();
+					$data['data']['keyword2']['value'] = '官方退票';
+					$data['data']['keyword3'] = array();
+					$data['data']['keyword3']['value'] = '￥' . round(((float)$refund_fee)/100,2);
+					$data['data']['remark'] = array();
+					$data['data']['remark']['value'] = '有疑问欢迎随时联系我们，欢迎下次乘坐合力巴士！';
+					$template_res = json_decode(send_cancel_ticket_template($data), true);
+					if($template_res['errcode'] != 0){
+						throw new Exception($template_res['errmsg'] . " 系统问题：发送模板消息失败 ");
+					}
 				
 					$suc = 1;
 					$msg = '';
@@ -466,7 +645,6 @@ if(isset($req['action'])){
 						$i++;
 					}
 					$sql = $sql . ')';
-					error_log($sql);
 					$sth = $dbh->prepare($sql);
 					$exe_params = array();
 					foreach($req['params'] as $key=>$value){
@@ -474,19 +652,40 @@ if(isset($req['action'])){
 					}
 					//error_log(print_r($exe_params));
 					$suc = $sth->execute($exe_params);
-					error_log("save_book ".$suc);
+					if($suc == 0){
+						$msg = json_encode($sth->errorInfo());
+						error_log($msg);
+					}else{
+						$msg = 'suc';
+					}
 					$dbh = null;
 				} catch (PDOException $e) {
 					//die ("Error!: " . $e->getMessage() . "<br/>");
 				}
-				$res  = array('url'=>'filter_book.php', 'suc'=>$suc);
+				$res  = array('url'=>'filter_book.php', 'suc'=>$suc, 'msg'=> $msg);
 				echo json_encode($res);	
 				break;
 			case "send_template"://发送模板消息给用户
+				$suc = 1;
 				$user_ids = $req['user_ids'];
-				$data = $req['params'];
-				send_admin_template($user_ids, $data);
-				$res  = array('suc'=>1);
+				$params = $req['params'];
+				
+				$data = array();
+				$data['first'] = array();
+				$data['first']['value'] = $params['first'];
+				$data['first']['color'] = '#173177';
+				$data['keyword1'] = array();
+				$data['keyword1']['value'] = $params['keyword1'];
+				$data['keyword2'] = array();
+				$data['keyword2']['value'] = $params['keyword2'];
+				$data['remark'] = array();
+				$data['remark']['value'] = $params['remark'];
+				
+				$msg = send_admin_template($user_ids, $data);
+				if($msg != ''){
+					$suc = 0;
+				}
+				$res  = array('suc'=>$suc, 'msg'=>$msg);
 				echo json_encode($res);	
 				break;
 			case "admin_template"://跳转到模板消息页面

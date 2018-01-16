@@ -62,6 +62,24 @@
 					</div>
 				</div>
 				<div class="form-group-col-2">
+					<div class="form-label">订单时间：</div>
+					<div class="form-cont">
+						<input id="keyword1" type="text" placeholder="" class="form-control form-boxed">
+					</div>
+				</div>
+				<div class="form-group-col-2">
+					<div class="form-label">行程变动内容：</div>
+					<div class="form-cont">
+						<input id="keyword2" type="text" placeholder="" class="form-control form-boxed">
+					</div>
+				</div>
+				<div class="form-group-col-2">
+					<div class="form-label">结语：</div>
+					<div class="form-cont">
+						<input id="remark" type="text" placeholder="" class="form-control form-boxed">
+					</div>
+				</div>
+				<div class="form-group-col-2">
 					<div class="form-label"></div>
 					<div class="form-cont">
 						<input onclick='send_template()' type="submit" class="btn btn-primary" value="发送" />
@@ -92,6 +110,9 @@
 				if(window.confirm('【敏感操作】你确定要为这'+user_ids.length+'个人发送消息吗？')){
 					var params = {};
 					params['first'] = $('#first').val();
+					params['keyword1'] = $('#keyword1').val();
+					params['keyword2'] = $('#keyword2').val();
+					params['remark'] = $('#remark').val();
 					var post_data = {'action': 'send_template', 'user_ids':user_ids, 'params':params};
 					$.ajax({
 						type        : 'post',
@@ -102,6 +123,8 @@
 						success     : function(data) {
 							if(data['suc'] == 1){
 								alert('发送成功！');
+							}else{
+								alert(data['msg']);
 							}
 						}
 					})
